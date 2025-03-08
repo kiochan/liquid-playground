@@ -1,7 +1,27 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next/types";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    turbo: {
+      rules: {
+        fs: {
+          as: false,
+        },
+        path: {
+          as: false,
+        },
+      },
+    },
+  },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.alias = {
+        fs: false,
+        path: false,
+      };
+    }
+    return config;
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
