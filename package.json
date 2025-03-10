@@ -9,10 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@pixi/core": "^7.4.3",
+    "@pixi/display": "^7.4.3",
+    "@pixi/graphics": "^7.4.3",
+    "@pixi/mesh": "^7.4.3",
+    "@pixi/particle-container": "^7.4.3",
+    "@pixi/ticker": "^7.4.3",
     "box2d-wasm": "npm:liquidfun-wasm@^6.0.4-lf.1",
     "next": "15.2.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-use": "^17.6.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

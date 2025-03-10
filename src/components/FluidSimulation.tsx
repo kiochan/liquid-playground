@@ -10,12 +10,13 @@ import React, {
 import Box2DFactory from "box2d-wasm";
 import createWall from "@/helpers/createWall";
 import createWaterDrop from "@/helpers/createWaterDrop";
-import { createContext2DRender } from "@/helpers/context2DRender";
-import { Box2D } from "@/helpers/Box2D";
+import { createRender } from "@/helpers/createRender";
+import type { Box2D } from "@/helpers/Box2D";
 import createParticleSystem from "@/helpers/createParticleSystem";
 
 export type FluidSimulationRef = {
   addDrop: (x: number, y: number) => void;
+  setGravity: (x: number, y: number) => void;
   clear: () => void;
 };
 
@@ -25,7 +26,7 @@ const FluidSimulation = forwardRef<FluidSimulationRef>((_, ref) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const worldRef = useRef<Box2D.b2World | null>(null);
-  const particleSystemRef = useRef<Box2D | null>(null);
+  const particleSystemRef = useRef<Box2D.b2ParticleSystem | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -53,13 +54,14 @@ const FluidSimulation = forwardRef<FluidSimulationRef>((_, ref) => {
     createWall(box2D, world, -10, 0, 1, 20);
     createWall(box2D, world, 10, 0, 1, 20);
     createWall(box2D, world, 0, -8, 20, 1);
+    createWall(box2D, world, 0, 8, 20, 1);
 
     const particleSystem = createParticleSystem(box2D, world);
     particleSystemRef.current = particleSystem;
 
     createWaterDrop(box2D, particleSystem, 0, 4, 1);
 
-    const render = createContext2DRender(canvas, box2D, world, particleSystem);
+    const render = createRender(canvas, box2D, world, particleSystem);
     render.start();
 
     return () => {
@@ -76,6 +78,12 @@ const FluidSimulation = forwardRef<FluidSimulationRef>((_, ref) => {
       if (!particleSystem) return;
 
       createWaterDrop(box2D, particleSystem, x, y, 1);
+    },
+    setGravity: (x: number, y: number) => {
+      const world = worldRef.current;
+      if (!box2D) return;
+      if (!world) return;
+      world?.SetGravity(new box2D.b2Vec2(x * 10, y * 10));
     },
     clear: () => {
       const world = worldRef.current;
