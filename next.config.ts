@@ -1,7 +1,7 @@
 import type { NextConfig } from "next/types";
 import "dotenv/config";
 
-const PORT = +(process.env.PORT || 3000);
+const PORT = String(process.env.PORT || 3000);
 
 const nextConfig: NextConfig = {
   env: {
