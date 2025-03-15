@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "box2d-wasm": "npm:liquidfun-wasm@^6.0.4-lf.1",
+    "dotenv": "^16.4.7",
     "next": "15.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
