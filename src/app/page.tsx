@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import FluidSimulation, {
   FluidSimulationRef,
 } from "@/components/FluidSimulation";
@@ -10,9 +10,45 @@ import settings from "@/const/settings";
 export default function Home() {
   const fluidSimulationRef = useRef<FluidSimulationRef | null>(null);
 
+  useEffect(() => {
+    if (!fluidSimulationRef.current) return;
+
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+
+    if (isMobile) {
+      const handleOrientation = (e: DeviceOrientationEvent) => {
+        if (!fluidSimulationRef.current) return;
+        const x = (e.gamma ?? 0) / 90; // -1 ~ 1
+        const y = (e.beta ?? 0) / 90; // -2 ~ 2
+        fluidSimulationRef.current.setGravity(x, y);
+      };
+
+      window.addEventListener("deviceorientation", handleOrientation, true);
+      return () =>
+        window.removeEventListener(
+          "deviceorientation",
+          handleOrientation,
+          true
+        );
+    } else {
+      const handleMouseMove = (e: MouseEvent) => {
+        if (!fluidSimulationRef.current) return;
+        const x = e.clientX / window.innerWidth - 0.5;
+        const y = -(e.clientY / window.innerHeight - 0.5);
+        fluidSimulationRef.current.setGravity(x, y);
+      };
+
+      window.addEventListener("mousemove", handleMouseMove);
+      return () => window.removeEventListener("mousemove", handleMouseMove);
+    }
+  }, []);
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center  justify-items-center ">
+      <main className="flex flex-col gap-8 row-start-2 items-center justify-items-center">
         <FluidSimulation ref={fluidSimulationRef} />
         <div className="flex gap-4 items-center flex-col sm:flex-row justify-center">
           <button
@@ -26,7 +62,7 @@ export default function Home() {
             onClick={() =>
               fluidSimulationRef.current?.addDrop(
                 Math.random() * 10 - 5,
-                Math.random() * 10
+                Math.random() * 10 - 5
               )
             }
           >
