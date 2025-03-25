@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import FluidSimulation, {
   FluidSimulationRef,
 } from "@/components/FluidSimulation";
@@ -9,67 +9,58 @@ import settings from "@/const/settings";
 
 export default function Home() {
   const fluidSimulationRef = useRef<FluidSimulationRef | null>(null);
+  const [permissionGranted, setPermissionGranted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const requestPermissionIfNeeded = async () => {
+    const mobileCheck =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+    setIsMobile(mobileCheck);
+
+    if (!mobileCheck) {
+      const handleMouseMove = (e: MouseEvent) => {
+        if (!fluidSimulationRef.current) return;
+        const x = e.clientX / window.innerWidth - 0.5;
+        const y = -(e.clientY / window.innerHeight - 0.5);
+        fluidSimulationRef.current.setGravity(x, y);
+      };
+
+      window.addEventListener("mousemove", handleMouseMove);
+      return () => window.removeEventListener("mousemove", handleMouseMove);
+    }
+  }, []);
+
+  const requestMotionPermission = async () => {
+    try {
       if (
         typeof DeviceMotionEvent !== "undefined" &&
-        // @ts-ignore：only for ios
+        // @ts-ignore
         typeof DeviceMotionEvent.requestPermission === "function"
       ) {
-        try {
-          // @ts-ignore：only for ios
-          const response = await DeviceMotionEvent.requestPermission();
-          if (response !== "granted") {
-            console.warn("DeviceMotion permission not granted");
-            return;
-          }
-        } catch (error) {
-          console.error("DeviceMotion permission error:", error);
+        // @ts-ignore
+        const response = await DeviceMotionEvent.requestPermission();
+        if (response !== "granted") {
+          alert("Permission not granted, gravity sensing cannot be enabled");
           return;
         }
       }
-      initGravityControl();
-    };
 
-    const initGravityControl = () => {
-      if (!fluidSimulationRef.current) return;
+      const handleOrientation = (e: DeviceOrientationEvent) => {
+        if (!fluidSimulationRef.current) return;
+        const x = (e.gamma ?? 0) / 90;
+        const y = -(e.beta ?? 0) / 90;
+        fluidSimulationRef.current.setGravity(x, y);
+      };
 
-      const isMobile =
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        );
-
-      if (isMobile) {
-        const handleOrientation = (e: DeviceOrientationEvent) => {
-          if (!fluidSimulationRef.current) return;
-          const x = (e.gamma ?? 0) / 90;
-          const y = (e.beta ?? 0) / 90;
-          fluidSimulationRef.current.setGravity(x, y);
-        };
-
-        window.addEventListener("deviceorientation", handleOrientation, true);
-        return () =>
-          window.removeEventListener(
-            "deviceorientation",
-            handleOrientation,
-            true
-          );
-      } else {
-        const handleMouseMove = (e: MouseEvent) => {
-          if (!fluidSimulationRef.current) return;
-          const x = e.clientX / window.innerWidth - 0.5;
-          const y = -(e.clientY / window.innerHeight - 0.5);
-          fluidSimulationRef.current.setGravity(x, y);
-        };
-
-        window.addEventListener("mousemove", handleMouseMove);
-        return () => window.removeEventListener("mousemove", handleMouseMove);
-      }
-    };
-
-    requestPermissionIfNeeded();
-  }, []);
+      window.addEventListener("deviceorientation", handleOrientation, true);
+      setPermissionGranted(true);
+    } catch (err) {
+      console.error("Permission request failed", err);
+      alert("Device permission request failed");
+    }
+  };
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -93,8 +84,18 @@ export default function Home() {
           >
             Add a Drop
           </button>
+
+          {isMobile && !permissionGranted && (
+            <button
+              className="rounded-full border border-solid border-blue-500 text-blue-500 dark:border-blue-400 dark:text-blue-400 transition-colors flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-950 text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
+              onClick={requestMotionPermission}
+            >
+              Enable gravity
+            </button>
+          )}
         </div>
       </main>
+
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
         <a
           className="flex items-center gap-2 hover:underline hover:underline-offset-4"
