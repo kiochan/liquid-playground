@@ -43,9 +43,9 @@ export function createRender(
    *  - aColor (3 floats, for RGB color)
    */
   const MAX_COUNT = 1000000; // Maximum number of particles
-  const positions = new Float32Array(MAX_COUNT * 2); // (x, y)
-  const sizes = new Float32Array(MAX_COUNT); // point size
-  const colors = new Float32Array(MAX_COUNT * 3); // (r, g, b)
+  const positions: Float32Array = new Float32Array(MAX_COUNT * 2); // (x, y)
+  const sizes: Float32Array = new Float32Array(MAX_COUNT); // point size
+  const colors: Float32Array = new Float32Array(MAX_COUNT * 3); // (r, g, b)
 
   // Create the geometry and bind the attributes
   const geometry = new Geometry()
@@ -176,9 +176,9 @@ export function createRender(
     }
 
     // Update the geometry buffers
-    geometry.getBuffer("aPosition").update(positions);
-    geometry.getBuffer("aSize").update(sizes);
-    geometry.getBuffer("aColor").update(colors);
+    geometry.getBuffer("aPosition").update(positions as unknown as number[]);
+    geometry.getBuffer("aSize").update(sizes as unknown as number[]);
+    geometry.getBuffer("aColor").update(colors as unknown as number[]);
 
     // Render the stage
     renderer.render(stage);
