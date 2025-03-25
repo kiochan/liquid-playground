@@ -11,39 +11,64 @@ export default function Home() {
   const fluidSimulationRef = useRef<FluidSimulationRef | null>(null);
 
   useEffect(() => {
-    if (!fluidSimulationRef.current) return;
+    const requestPermissionIfNeeded = async () => {
+      if (
+        typeof DeviceMotionEvent !== "undefined" &&
+        // @ts-ignore：only for ios
+        typeof DeviceMotionEvent.requestPermission === "function"
+      ) {
+        try {
+          // @ts-ignore：only for ios
+          const response = await DeviceMotionEvent.requestPermission();
+          if (response !== "granted") {
+            console.warn("DeviceMotion permission not granted");
+            return;
+          }
+        } catch (error) {
+          console.error("DeviceMotion permission error:", error);
+          return;
+        }
+      }
+      initGravityControl();
+    };
 
-    const isMobile =
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      );
+    const initGravityControl = () => {
+      if (!fluidSimulationRef.current) return;
 
-    if (isMobile) {
-      const handleOrientation = (e: DeviceOrientationEvent) => {
-        if (!fluidSimulationRef.current) return;
-        const x = (e.gamma ?? 0) / 90; // -1 ~ 1
-        const y = (e.beta ?? 0) / 90; // -2 ~ 2
-        fluidSimulationRef.current.setGravity(x, y);
-      };
-
-      window.addEventListener("deviceorientation", handleOrientation, true);
-      return () =>
-        window.removeEventListener(
-          "deviceorientation",
-          handleOrientation,
-          true
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
         );
-    } else {
-      const handleMouseMove = (e: MouseEvent) => {
-        if (!fluidSimulationRef.current) return;
-        const x = e.clientX / window.innerWidth - 0.5;
-        const y = -(e.clientY / window.innerHeight - 0.5);
-        fluidSimulationRef.current.setGravity(x, y);
-      };
 
-      window.addEventListener("mousemove", handleMouseMove);
-      return () => window.removeEventListener("mousemove", handleMouseMove);
-    }
+      if (isMobile) {
+        const handleOrientation = (e: DeviceOrientationEvent) => {
+          if (!fluidSimulationRef.current) return;
+          const x = (e.gamma ?? 0) / 90;
+          const y = (e.beta ?? 0) / 90;
+          fluidSimulationRef.current.setGravity(x, y);
+        };
+
+        window.addEventListener("deviceorientation", handleOrientation, true);
+        return () =>
+          window.removeEventListener(
+            "deviceorientation",
+            handleOrientation,
+            true
+          );
+      } else {
+        const handleMouseMove = (e: MouseEvent) => {
+          if (!fluidSimulationRef.current) return;
+          const x = e.clientX / window.innerWidth - 0.5;
+          const y = -(e.clientY / window.innerHeight - 0.5);
+          fluidSimulationRef.current.setGravity(x, y);
+        };
+
+        window.addEventListener("mousemove", handleMouseMove);
+        return () => window.removeEventListener("mousemove", handleMouseMove);
+      }
+    };
+
+    requestPermissionIfNeeded();
   }, []);
 
   return (
